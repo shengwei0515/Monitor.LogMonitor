@@ -60,6 +60,22 @@ services:
       - elasticsearch
     restart : always
     
+  curator:
+    build:
+      context: ./build/curator
+      dockerfile: curator.dockerfile
+      args:
+        CURATOR_VERSION: 5.7
+    container_name: curator
+    hostname: curator
+    networks:
+      - log-monitor
+    restart : always
+    depends_on:
+      - elasticsearch
+    volumes:
+      - ./config/curator:/config    
+  
 networks:
   log-monitor:
     driver: bridge
