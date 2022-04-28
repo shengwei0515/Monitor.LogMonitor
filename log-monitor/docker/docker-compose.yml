@@ -1,0 +1,48 @@
+version: "3"
+services:
+
+  elasticsearch:
+    image: elasticsearch:7.16.2
+    container_name: elasticsearch
+    hostname: elasticsearch
+    volumes:
+      - ../data/elasticsearch:/usr/share/elasticsearch/data
+    environment:
+      ES_JAVA_OPTS: -Xms1g -Xmx1g
+      cluster.initial_master_nodes: elasticsearch
+    ports:
+      - 9200:9200
+    restart: always
+    networks: 
+      - log-monitor
+    logging:
+      options:
+        max-file: "5"
+        max-size: "1g"
+
+
+  kibana:
+    build:
+      context: ./build/kibana
+      dockerfile: kibana.dockerfile
+      args:
+        KIBANA_VERSION: "7.16.2"
+    container_name: kibana
+    hostname: kibana
+    volumes:
+      - ./config/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+    restart : always
+    networks:
+      - log-monitor
+    logging:
+      options:
+        max-file: "5"
+        max-size: "1g"
+
+networks:
+  log-monitor:
+    driver: bridge
