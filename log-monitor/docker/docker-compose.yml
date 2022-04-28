@@ -20,7 +20,6 @@ services:
         max-file: "5"
         max-size: "1g"
 
-
   kibana:
     build:
       context: ./build/kibana
