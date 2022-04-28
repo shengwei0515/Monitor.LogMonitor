@@ -4,5 +4,5 @@ server.host: "0"
 elasticsearch.hosts: [ "http://elasticsearch:9200" ]
 monitoring.ui.container.elasticsearch.enabled: true
 elastalertKibanaPlugin.serverSsl: false
-elastalertKibanaPlugin.serverHost: elastalert
+elastalertKibanaPlugin.serverHost: elastalert-server
 elastalertKibanaPlugin.serverPort: 3030
