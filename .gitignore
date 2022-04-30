@@ -1,0 +1,4 @@
+log-monitor/data/elasticsearch
+log-monitor/data/fluentd
+filebeat-example/data
+filebeat-example/logs

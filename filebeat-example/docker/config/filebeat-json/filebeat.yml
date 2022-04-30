@@ -1,0 +1,44 @@
+filebeat.inputs:
+## beats log ##
+- type: log
+  enabled: true
+  paths:
+    - /var/log/filebeat/filebeat*
+  tag: filebeat-json
+  tags: 
+    - 'filebeat-json'
+  fields:
+    tag: filebeat-json
+  ignore_older: 168h
+  json.keys_under_root: true
+  json.overwrite_keys: true
+  json.add_error_key: true
+  json.expand_keys: true
+
+# filebeat.config.modules:
+#   path: ${path.config}/modules.d/*.yml
+#   reload.enabled: true
+
+setup.template.settings:
+  index.number_of_shards: 1
+
+output.elasticsearch:
+  hosts: ['host.docker.internal:9200']
+  index: "filebeat-json-%{[agent.version]}-%{+yyyy.MM.dd}"
+
+setup.kibana:
+  host: "host.docker.internal:5601"
+
+
+logging.level: info
+logging.to_files: true
+logging.files.path: /var/log/filebeat/
+logging.files.name: filebeat.log
+logging.files.interval: 24h
+logging.files.rotateeverybytes: 510020000
+logging.files.keepfiles: 7
+logging.metrics.period: 600s
+logging.json: true # write json log
+setup.template.name: "filebeat-json"
+setup.template.pattern: "filebeat-json-*"  
+setup.ilm.enabled: false

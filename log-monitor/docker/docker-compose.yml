@@ -1,0 +1,107 @@
+version: "3"
+services:
+  elasticsearch:
+    image: elasticsearch:${ELASTICSEARCH_VERSION}
+    container_name: elasticsearch
+    hostname: elasticsearch
+    volumes:
+      - ../data/elasticsearch:/usr/share/elasticsearch/data
+    environment:
+      ES_JAVA_OPTS: -Xms1g -Xmx1g
+      cluster.initial_master_nodes: elasticsearch
+    ports:
+      - 9200:9200
+    restart: always
+    networks: 
+      - log-monitor
+    logging:
+      options:
+        max-file: "5"
+        max-size: "1g"
+
+  kibana:
+    build:
+      context: ./build/kibana
+      dockerfile: kibana.dockerfile
+      args:
+        KIBANA_VERSION: "${ELASTICSEARCH_VERSION}"
+    container_name: kibana
+    hostname: kibana
+    volumes:
+      - ./config/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+    restart : always
+    networks:
+      - log-monitor
+    logging:
+      options:
+        max-file: "5"
+        max-size: "1g"
+
+  fluentd:
+    build:
+      context: ./build/fluentd
+      dockerfile: fluentd.dockerfile
+      args:
+        ELASTICSEARCH_PLUGIN_VERSION: ${ELASTICSEARCH_PLUGIN_VERSION}
+    container_name: fluentd
+    hostname: fluentd
+    volumes:
+      - ../data/fluentd/logs:/var/log # this is buffer path
+      - ./config/fluentd/fluent.conf:/fluentd/etc/fluent.conf
+    environment:
+      FLUENT_UID: 0
+    ports:
+      - 24224:24224
+      - 24224:24224/udp
+      - 5044:5044 
+    depends_on:
+      - elasticsearch
+    networks:
+      - log-monitor
+    restart : always
+    logging:
+      options:
+        max-file: "5"
+        max-size: "1g"
+    
+# reference: https://github.com/johnsusek/praeco
+  elastalert-server:
+    image: praecoapp/elastalert-server:20210517
+    container_name: elastalert-server
+    hostname: elastalert-server
+    ports: 
+      - 3030:3030
+      - 3333:3333
+    volumes:
+      - ./config/elastalert-server/elastalert.config.yaml:/opt/elastalert/config.yaml
+      - ./config/elastalert-server/api.config.json:/opt/elastalert-server/config/config.json
+      - ../data/elastalert-server/rules:/opt/elastalert/rules
+    networks:
+      - log-monitor
+    depends_on:
+      - elasticsearch
+    restart : always
+    
+  curator:
+    build:
+      context: ./build/curator
+      dockerfile: curator.dockerfile
+      args:
+        CURATOR_VERSION: 5.7
+    container_name: curator
+    hostname: curator
+    networks:
+      - log-monitor
+    restart : always
+    depends_on:
+      - elasticsearch
+    volumes:
+      - ./config/curator:/config    
+  
+networks:
+  log-monitor:
+    driver: bridge
