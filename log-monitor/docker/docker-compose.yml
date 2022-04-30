@@ -1,8 +1,7 @@
 version: "3"
 services:
-
   elasticsearch:
-    image: elasticsearch:7.16.2
+    image: elasticsearch:${ELASTICSEARCH_VERSION}
     container_name: elasticsearch
     hostname: elasticsearch
     volumes:
@@ -25,7 +24,7 @@ services:
       context: ./build/kibana
       dockerfile: kibana.dockerfile
       args:
-        KIBANA_VERSION: "7.16.2"
+        KIBANA_VERSION: "${ELASTICSEARCH_VERSION}"
     container_name: kibana
     hostname: kibana
     volumes:
@@ -42,6 +41,33 @@ services:
         max-file: "5"
         max-size: "1g"
 
+  fluentd:
+    build:
+      context: ./build/fluentd
+      dockerfile: fluentd.dockerfile
+      args:
+        ELASTICSEARCH_PLUGIN_VERSION: ${ELASTICSEARCH_PLUGIN_VERSION}
+    container_name: fluentd
+    hostname: fluentd
+    volumes:
+      - ../data/fluentd/logs:/var/log # this is buffer path
+      - ./config/fluentd/fluent.conf:/fluentd/etc/fluent.conf
+    environment:
+      FLUENT_UID: 0
+    ports:
+      - 24224:24224
+      - 24224:24224/udp
+      - 5044:5044 
+    depends_on:
+      - elasticsearch
+    networks:
+      - log-monitor
+    restart : always
+    logging:
+      options:
+        max-file: "5"
+        max-size: "1g"
+    
 # reference: https://github.com/johnsusek/praeco
   elastalert-server:
     image: praecoapp/elastalert-server:20210517
