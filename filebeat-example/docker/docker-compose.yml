@@ -1,0 +1,31 @@
+version: "3"
+services:
+  # mount file and send to fluentd
+  filebeat-file:
+    image: docker.elastic.co/beats/filebeat:7.16.2
+    container_name: filebeat-file
+    environment:
+      - TZ=Asia/Taipei
+    volumes:
+      - ../data/filebeat-file/:/usr/share/filebeat/data/
+      - ../logs/filebeat-file/:/var/log/filebeat/
+      - ./config/filebeat-file/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      # - ./<some_folder_path_of_your_log>:/usr/share/filebeat/mounted_log_folders/
+    command: 
+      - -e=false # write log to log file
+      - --strict.perms=false # to stop filebeat to check if the owner of filebeat.yml is root
+
+  # parse json files and send to elasticsearch
+  filebeat-json:
+    image: docker.elastic.co/beats/filebeat:7.16.2
+    container_name: filebeat-json
+    environment:
+      - TZ=Asia/Taipei
+    volumes:
+      - ../data/filebeat-json/:/usr/share/filebeat/data/
+      - ../logs/filebeat-json/:/var/log/filebeat/
+      - ./config/filebeat-json/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      # - ./<some_folder_path_of_your_log>:/usr/share/filebeat/mounted_log_folders/
+    command: 
+      - -e=false # write log to log file
+      - --strict.perms=false # to stop filebeat to check if the owner of filebeat.yml is root
